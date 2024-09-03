@@ -1,6 +1,3 @@
-[submodule "golang-voley-live-score"]
-	path = golang-voley-live-score
-	url = git@github.com:JorgeSaicoski/golang-voley-live-score.git
 [submodule "golang-volley-live-score"]
 	path = golang-volley-live-score
 	url = git@github.com:JorgeSaicoski/golang-volley-live-score.git
