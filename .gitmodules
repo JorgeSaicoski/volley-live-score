@@ -4,3 +4,6 @@
 [submodule "ionic-volley-live-score"]
 	path = ionic-volley-live-score
 	url = git@github.com:JorgeSaicoski/ionic-volley-live-score.git
+[submodule "angular-volley-live-score-"]
+	path = angular-volley-live-score-
+	url = git@github.com:JorgeSaicoski/angular-volley-live-score-.git
