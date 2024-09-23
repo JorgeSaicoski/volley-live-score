@@ -11,7 +11,7 @@ This web application is designed to help parents of a volleyball team stay updat
 
 ## Technology Stack
 - **Backend**: Golang with GORM for ORM and SQLite as the database.
-- **Frontend**: Angular for building the user interface.
+- **Frontend**: React for building the user interface.
 - **Authentication**: JWT for handling user logins and role-based access control.
   
 ## ER Diagram Overview
