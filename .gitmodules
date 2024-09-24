@@ -1,6 +1,3 @@
-[submodule "golang-volley-live-score"]
-	path = golang-volley-live-score
-	url = git@github.com:JorgeSaicoski/golang-volley-live-score.git
 [submodule "ReactDev"]
 	path = ReactDev
 	url = git@github.com:JorgeSaicoski/react-ws-set.git
