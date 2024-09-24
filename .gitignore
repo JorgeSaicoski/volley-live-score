@@ -1,0 +1,68 @@
+# Binaries for programs and plugins
+
+*.exe
+
+*.exe~
+
+*.dll
+
+*.so
+
+*.dylib
+
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+
+*.out
+
+
+# Dependency directories (remove the comment below if you use Go modules)
+
+*vendor/*
+
+
+# Go workspace file
+
+*go.work
+
+
+# Go modules
+
+*go.mod
+
+*go.sum
+
+
+# IDE and editor files
+
+*.vscode/
+
+*.idea/
+
+*.swp
+
+*.swo
+
+*.bak
+
+*.tmp
+
+
+# Logs
+
+*.log
+
+
+# Database files
+
+*.db
+
+
+# Docker
+
+docker-compose.override.yml
+docker-compose.*.yml
+
+# Ignore Nix-related files
+*/nix-*
+*result*
