@@ -1,12 +1,6 @@
 [submodule "golang-volley-live-score"]
 	path = golang-volley-live-score
 	url = git@github.com:JorgeSaicoski/golang-volley-live-score.git
-[submodule "ionic-volley-live-score"]
-	path = ionic-volley-live-score
-	url = git@github.com:JorgeSaicoski/ionic-volley-live-score.git
-[submodule "angular-volley-live-score-"]
-	path = angular-volley-live-score
-	url = git@github.com:JorgeSaicoski/angular-volley-live-score.git
 [submodule "ReactDev"]
 	path = ReactDev
 	url = git@github.com:JorgeSaicoski/react-ws-set.git
