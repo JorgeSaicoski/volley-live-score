@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  matches:
+    build:
+      context: ./docker
+    container_name: volley_live_score_matches
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_PATH=/app/volley_live_data.db
+    restart: always
+
+  sets:
+    build:
+      context: ./docker
+    container_name: volley_live_score_sets
+    ports:
+      - "8081:8081"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_PATH=/app/volley_live_data.db
+    restart: always
+
+  db:
+    image: nouchka/sqlite3
+    container_name: sqlite
+    volumes:
+      - ./volley_live_data.db:/var/lib/sqlite/volley_live_data.db
+    restart: always
