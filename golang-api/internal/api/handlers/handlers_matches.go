@@ -165,3 +165,26 @@ func ToggleMatchLive(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Match live status updated", "match": match})
 }
+
+func CreateSet(c *gin.Context) {
+	matchIDParam := c.Param("matchID")
+	matchID, err := strconv.Atoi(matchIDParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid matchID"})
+		return
+	}
+
+	set := database.Set{
+		MatchID:    uint(matchID),
+		ScoreTeamA: 0,
+		ScoreTeamB: 0,
+		Finished:   false,
+	}
+
+	if err := database.DB.Create(&set).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create set"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Set created successfully", "set": set})
+}

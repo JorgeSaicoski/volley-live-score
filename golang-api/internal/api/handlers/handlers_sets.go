@@ -50,7 +50,20 @@ func handleWatchingConnection(conn *websocket.Conn) {
 
 	for {
 		time.Sleep(2 * time.Second)
-		err := wsjson.Write(ctx, conn, "match updated")
+
+		var set database.Set
+		err := database.DB.Where("finished = ?", false).First(&set).Error
+		if err != nil {
+			fmt.Println("Error fetching the set:", err)
+			return
+		}
+
+		scoreUpdate := gin.H{
+			"team_a_score": set.ScoreTeamA,
+			"team_b_score": set.ScoreTeamB,
+		}
+
+		err = wsjson.Write(ctx, conn, scoreUpdate)
 		if err != nil {
 			fmt.Println("Error sending update to watcher:", err)
 			return

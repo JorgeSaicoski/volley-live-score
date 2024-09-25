@@ -11,5 +11,6 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/matches/:id", handlers.GetMatchByID)
 	r.PATCH("/matches/:id/live", handlers.ToggleMatchLive)
 	r.POST("/matches", handlers.CreateMatch)
+	r.POST("/matches/:id", handlers.CreateSet)
 	r.PUT("/matches/:id", handlers.UpdateMatch)
 }
