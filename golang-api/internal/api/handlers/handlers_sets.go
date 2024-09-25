@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/JorgeSaicoski/golang-volley-live-score/internal/services/database"
@@ -18,6 +19,10 @@ type Message struct {
 	Operation string `json:"operation"`
 	Team      string `json:"team"`
 }
+
+var scoreUpdateChan = make(chan gin.H)
+var activeConnections = make(map[*websocket.Conn]bool)
+var mu sync.Mutex
 
 func HandleWebSocker(c *gin.Context) {
 	role := c.DefaultQuery("role", "watch")
@@ -37,6 +42,14 @@ func HandleWebSocker(c *gin.Context) {
 		return
 	}
 	defer conn.Close(websocket.StatusNormalClosure, "")
+	mu.Lock()
+	activeConnections[conn] = true
+	mu.Unlock()
+	defer func() {
+		mu.Lock()
+		delete(activeConnections, conn)
+		mu.Unlock()
+	}()
 
 	if role == "interact" {
 		handleInteractiveConnection(conn, uint(matchID))
@@ -49,23 +62,20 @@ func handleWatchingConnection(conn *websocket.Conn) {
 	ctx := context.Background()
 
 	for {
-		time.Sleep(2 * time.Second)
-
-		var set database.Set
-		err := database.DB.Where("finished = ?", false).First(&set).Error
-		if err != nil {
-			fmt.Println("Error fetching the set:", err)
-			return
-		}
-
-		scoreUpdate := gin.H{
-			"team_a_score": set.ScoreTeamA,
-			"team_b_score": set.ScoreTeamB,
-		}
-
-		err = wsjson.Write(ctx, conn, scoreUpdate)
-		if err != nil {
-			fmt.Println("Error sending update to watcher:", err)
+		select {
+		case scoreUpdate := <-scoreUpdateChan:
+			mu.Lock()
+			for connection := range activeConnections {
+				err := wsjson.Write(ctx, connection, scoreUpdate)
+				if err != nil {
+					fmt.Println("Error sending update to watcher:", err)
+					connection.Close(websocket.StatusNormalClosure, "error")
+					delete(activeConnections, connection)
+				}
+			}
+			mu.Unlock()
+		case <-time.After(2 * time.Minute):
+			fmt.Println("No updates within 10 seconds, closing connection")
 			return
 		}
 	}
@@ -90,14 +100,22 @@ func handleInteractiveConnection(conn *websocket.Conn, matchID uint) {
 			fmt.Printf("Removing point from team %s\n", message.Team)
 			updateScoreInSet(matchID, message.Team, "remove")
 		}
-
 		var set database.Set
 		if err := database.DB.Where("match_id = ? AND finished = ?", matchID, false).First(&set).Error; err == nil {
 			scoreUpdate := gin.H{
 				"team_a_score": set.ScoreTeamA,
 				"team_b_score": set.ScoreTeamB,
 			}
-			wsjson.Write(ctx, conn, scoreUpdate)
+			mu.Lock()
+			for connection := range activeConnections {
+				err := wsjson.Write(ctx, connection, scoreUpdate)
+				if err != nil {
+					fmt.Println("Error sending update to watcher:", err)
+					connection.Close(websocket.StatusNormalClosure, "error")
+					delete(activeConnections, connection)
+				}
+			}
+			mu.Unlock()
 		}
 
 		fmt.Println("Received interactive message:", message)
@@ -128,6 +146,11 @@ func updateScoreInSet(matchID uint, team string, operation string) error {
 	if err := database.DB.Save(&set).Error; err != nil {
 		return fmt.Errorf("failed to update set score: %w", err)
 	}
+	scoreUpdate := gin.H{
+		"team_a_score": set.ScoreTeamA,
+		"team_b_score": set.ScoreTeamB,
+	}
+	scoreUpdateChan <- scoreUpdate
 
 	return nil
 }
