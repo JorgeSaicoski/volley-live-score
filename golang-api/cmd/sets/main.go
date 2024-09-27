@@ -29,7 +29,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.GET("/ws", handlers.HandleWebSocker)
+	r.GET("/ws", handlers.HandleWebSocket)
 
 	r.Run(":8081")
 }

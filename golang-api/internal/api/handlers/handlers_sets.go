@@ -24,7 +24,7 @@ var scoreUpdateChan = make(chan gin.H)
 var activeConnections = make(map[*websocket.Conn]bool)
 var mu sync.Mutex
 
-func HandleWebSocker(c *gin.Context) {
+func HandleWebSocket(c *gin.Context) {
 	role := c.DefaultQuery("role", "watch")
 	matchIDParam := c.Query("matchID")
 	matchID, err := strconv.Atoi(matchIDParam)
@@ -42,9 +42,12 @@ func HandleWebSocker(c *gin.Context) {
 		return
 	}
 	defer conn.Close(websocket.StatusNormalClosure, "")
-	mu.Lock()
-	activeConnections[conn] = true
-	mu.Unlock()
+	handleNewConn(conn, uint(matchID))
+	/*
+		mu.Lock()
+		activeConnections[conn] = true
+		mu.Unlock()
+	*/
 	defer func() {
 		mu.Lock()
 		delete(activeConnections, conn)
@@ -54,11 +57,11 @@ func HandleWebSocker(c *gin.Context) {
 	if role == "interact" {
 		handleInteractiveConnection(conn, uint(matchID))
 	} else {
-		handleWatchingConnection(conn)
+		handleWatchingConnection()
 	}
 }
 
-func handleWatchingConnection(conn *websocket.Conn) {
+func handleWatchingConnection() {
 	ctx := context.Background()
 
 	for {
@@ -155,24 +158,26 @@ func updateScoreInSet(matchID uint, team string, operation string) error {
 	return nil
 }
 
-func FinishSet(c *gin.Context) {
+func handleNewConn(conn *websocket.Conn, matchID uint) {
+	mu.Lock()
+	activeConnections[conn] = true
+	ctx := context.Background()
 	var set database.Set
 
-	if err := database.DB.Where("finished = ?", false).First(&set).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching live set"})
+	if err := database.DB.Where("match_id = ? AND finished = ?", matchID, false).First(&set).Error; err != nil {
 		return
 	}
-
-	if set.Finished {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Set already finished"})
-		return
+	matchScore := gin.H{
+		"team_a_score": set.ScoreTeamA,
+		"team_b_score": set.ScoreTeamB,
 	}
 
-	set.Finished = true
-	if err := database.DB.Save(&set).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to finish the set"})
-		return
+	err := wsjson.Write(ctx, conn, matchScore)
+	if err != nil {
+		fmt.Println("Error sending update to new connection:", err)
+		conn.Close(websocket.StatusNormalClosure, "error")
+		delete(activeConnections, conn)
 	}
+	mu.Unlock()
 
-	c.JSON(http.StatusOK, gin.H{"message": "Set finished", "set": set})
 }
