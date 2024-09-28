@@ -30,6 +30,7 @@ func main() {
 	}))
 
 	r.GET("/ws", handlers.HandleWebSocket)
+	r.GET("/ws/finish", handlers.FinishSet)
 
 	r.Run(":8081")
 }
