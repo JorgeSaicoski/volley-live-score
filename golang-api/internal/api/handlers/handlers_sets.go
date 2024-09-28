@@ -43,11 +43,7 @@ func HandleWebSocket(c *gin.Context) {
 	}
 	defer conn.Close(websocket.StatusNormalClosure, "")
 	handleNewConn(conn, uint(matchID))
-	/*
-		mu.Lock()
-		activeConnections[conn] = true
-		mu.Unlock()
-	*/
+
 	defer func() {
 		mu.Lock()
 		delete(activeConnections, conn)
@@ -180,4 +176,55 @@ func handleNewConn(conn *websocket.Conn, matchID uint) {
 	}
 	mu.Unlock()
 
+}
+
+func FinishSet(c *gin.Context) {
+
+	matchIDParam := c.Query("matchID")
+	matchID, err := strconv.Atoi(matchIDParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid matchID"})
+		return
+	}
+	var set database.Set
+	if err := database.DB.Where("match_id = ? AND finished = ?", matchID, false).First(&set).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching live set"})
+		return
+
+	}
+	if set.Finished {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Set already finished"})
+		return
+	}
+
+	if set.ScoreTeamA > set.ScoreTeamB {
+		set.Win = true
+	} else if set.ScoreTeamA < set.ScoreTeamB {
+		set.Win = false
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot finish set. The score is tied, no winner."})
+		return
+	}
+	set.Finished = true
+	if err := database.DB.Save(&set).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save finish the set"})
+		return
+	}
+
+	ctx := context.Background()
+	setFinishedMessage := gin.H{
+		"team_a_score": set.ScoreTeamA,
+		"team_b_score": set.ScoreTeamB,
+		"message":      "Set finished",
+	}
+	for connection := range activeConnections {
+		err := wsjson.Write(ctx, connection, setFinishedMessage)
+		if err != nil {
+			fmt.Println("Error sending update to watcher:", err)
+			connection.Close(websocket.StatusNormalClosure, "error")
+			delete(activeConnections, connection)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Set finished", "set": set})
 }
