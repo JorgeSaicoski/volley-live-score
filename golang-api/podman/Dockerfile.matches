@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY . .
 
+RUN apt-get update && apt-get install -y gcc
+
 RUN go mod tidy
 
 RUN go build -o matches cmd/matches/main.go
