@@ -1,6 +1,6 @@
 # Golang Volley Live Score
 
-This repository is part of a larger project that includes Golang, Ionic, and Docker. The goal of the project is to provide live scores and updates for a volleyball team, allowing parents to stay informed about their children's performance in matches. This specific repository contains the backend code for the project.
+This repository is part of a larger project that includes Golang, React, and Podman/Docker. The goal of the project is to provide live scores and updates for a volleyball team, allowing parents to stay informed about their children's performance in matches. This specific repository contains the backend code for the project.
 
 ## Project Overview
 
@@ -19,16 +19,21 @@ The **Golang Volley Live Score** project aims to:
 ## Technologies Used
 
 - **Golang**: The primary language for the backend.
-- **Ionic**: Used for the frontend (not included in this repository).
-- **Docker**: For containerization and deployment.
+- **React**: Used for the frontend (not included in this repository).
+- **Podman**: For containerization and deployment (preferred for security reasons).
+- **Docker**: An alternative option for containerization.
 - **Nix**: Used for creating reproducible development environments.
+
+## Why Podman?
+
+This project uses **Podman** for containerization due to its fully open-source nature and enhanced security compared to Docker. However, you can still use **Docker** if that's your preference.
 
 ## Getting Started
 
 ### Prerequisites
 
 - Golang installed on your machine.
-- Docker installed on your machine.
+- Podman or Docker installed on your machine.
 - Nix installed on your machine (optional, for development).
 
 ### Installation
@@ -36,8 +41,8 @@ The **Golang Volley Live Score** project aims to:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/JorgeSaicoski/golang-volley-live-score.git
-   cd golang-volley-live-score
+   git clone https://github.com/JorgeSaicoski/volley-live-score.git
+   cd golang-api
    ```
 
 2. Install dependencies:
@@ -52,7 +57,33 @@ The **Golang Volley Live Score** project aims to:
    go run cmd/matches/main.go
    ```
 
+### Running with Podman
+
+1. Build the Podman image:
+
+   ```bash
+   podman build -t golang-volley-live-score .
+   ```
+
+2. Run the Podman container:
+
+   ```bash
+   podman run -p 8080:8080 golang-volley-live-score
+   ```
+
+Alternatively, you can use Podman Compose for orchestrating multiple services, such as the matches and sets services:
+
+1. Start the application using Podman Compose:
+
+   ```bash
+   podman-compose up --build
+   ```
+
+2. Access the application at `http://localhost:8080` or `http://localhost:8081` depending on the service.
+
 ### Running with Docker
+
+The project is compatible with Docker as well. You can follow these steps to run it using Docker:
 
 1. Build the Docker image:
 
@@ -66,29 +97,26 @@ The **Golang Volley Live Score** project aims to:
    docker run -p 8080:8080 golang-volley-live-score
    ```
 
-Alternatively, you can use Docker Compose for orchestrating multiple services, such as the matches and sets services:
-
-1. Start the application using Docker Compose:
+3. Alternatively, use Docker Compose:
 
    ```bash
    docker-compose up --build
    ```
 
-2. Access the application at `http://localhost:8080` or `http://localhost:8081` depending on the service.
-
 ### Using Nix for Development
 
-You can use Nix to ensure a consistent development environment. Nix handles dependencies like Docker and Golang, making the development setup reproducible.
+You can use Nix to ensure a consistent development environment. Nix handles dependencies like Podman/Docker and Golang, making the development setup reproducible.
 
 1. Install Nix: [Nix Installation Guide](https://nixos.org/manual/nix/stable/#chap-installation).
 
 2. Enter the Nix Shell:
 
    ```bash
+   cd nix
    nix-shell
    ```
 
-   This will open a shell with Docker and Golang installed and ready to use.
+   This will open a shell with Podman/Docker and Golang installed and ready to use.
 
 ### API Endpoints
 
@@ -119,4 +147,5 @@ Some code is repeated in the project. Refactoring and updating this code will he
 ## License
 
 This project is licensed under the MIT License.
+
 
